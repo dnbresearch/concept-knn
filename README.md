@@ -2,7 +2,7 @@
 
 **Interpretable Graph Clustering of LLM Conversations via Classical NLP**
 
-[![Paper](https://img.shields.io/badge/IEEE-CONECCT%202025-blue)](https://ieeexplore.ieee.org/)
+[![Paper](https://img.shields.io/badge/IEEE-CONECCT%202026-blue)](https://ieeexplore.ieee.org/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-green.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -56,7 +56,7 @@ Concept-kNN is a scalable, taxonomy-free clustering pipeline for organizing larg
 ## Installation
 
 ```bash
-git clone https://github.com/divyansh-bhatia/concept-knn.git
+git clone https://github.com/dnbresearch/concept-knn.git
 cd concept-knn
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
@@ -272,11 +272,11 @@ Leiden: 3 iterations, seed 42.
 ## Citation
 
 ```bibtex
-@inproceedings{bhatia2025conceptknn,
+@inproceedings{bhatia2026conceptknn,
   title={Concept-kNN: Interpretable Graph Clustering of LLM Conversations via Classical NLP},
   author={Bhatia, Divyansh and Mehala, N.},
   booktitle={Proc. IEEE CONECCT},
-  year={2025}
+  year={2026}
 }
 ```
 
