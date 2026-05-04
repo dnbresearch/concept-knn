@@ -1,0 +1,54 @@
+# Concept-kNN Default Configuration
+# These values are optimal across both ShareGPT and LMSYS datasets.
+
+# ── Concept Extraction ──
+extraction:
+  spacy_model: "en_core_web_sm"
+  prompt_boost: 3.0                # Weight multiplier for prompt-sourced concepts
+  idf_min: 0.5                     # Minimum IDF to retain concept
+  df_min: 3                        # Minimum document frequency
+  df_max_ratio: 0.08               # Maximum document frequency as fraction of corpus
+  inheritance_discount: 0.5        # Multi-turn concept inheritance factor
+
+# ── PMI Densification ──
+pmi:
+  top_k: 35                        # Number of PMI associates per concept
+  min_pmi: 1.0                     # Minimum PMI score for association
+  min_freq: 3                      # Minimum concept frequency for PMI
+  decay: 0.3                       # Weight decay for added associates
+  max_new: 20                      # Max new concepts added per item
+
+# ── Hybrid Vectors ──
+vectors:
+  alpha: 0.8                       # Concept weight in hybrid blend (1-α for TF-IDF)
+  tfidf_features: 5000             # Number of TF-IDF features
+  tfidf_ngram_range: [1, 2]        # Unigrams and bigrams
+  tfidf_sublinear_tf: true         # Use sublinear TF scaling
+
+# ── Graph Construction ──
+graph:
+  k_neighbors: 30                  # kNN neighborhood size
+  sigma: 0.6                       # Minimum cosine similarity for edges
+  metric: "cosine"                 # Similarity metric
+
+# ── Leiden Clustering ──
+leiden:
+  resolution: 30                   # Resolution parameter γ (30-80)
+  n_iterations: 3                  # Number of Leiden iterations
+  seed: 42                         # Random seed for reproducibility
+
+# ── Cascading Singleton Reassignment ──
+cascade:
+  thresholds: [0.5, 0.4, 0.3, 0.2, 0.1, 0.0]  # 6 rounds
+  recompute_centroids: true        # Recompute after each round
+
+# ── Ground Truth Generation ──
+ground_truth:
+  model: "gpt-4o"                  # LLM for concept categorization
+  batch_size: 200                  # Concepts per API batch
+  granularities: ["coarse", "mid", "fine"]
+
+# ── Evaluation ──
+evaluation:
+  primary_metric: "bal"            # NMI_fine × coverage
+  granularities: ["coarse", "mid", "fine"]

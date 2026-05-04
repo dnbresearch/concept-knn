@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+Untitled*.ipynb
+
+# Data files (too large for git)
+data/*.json
+data/*.csv
+data/*.parquet
+
+# Ground truth (contains LLM-generated labels)
+ground_truth/*.json
+gtlmsys/*.json
+
+# Results (regenerable)
+results*/
+st_results/
+tfidf_results/
+qdc_results/
+checkpoints/
+
+# Features (large, regenerable)
+train_*_features_*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.synctex.gz
+paper/*.fdb_latexmk
+paper/*.fls

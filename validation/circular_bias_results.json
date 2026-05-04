@@ -1,0 +1,76 @@
+{
+  "config": {
+    "n_total": 161764,
+    "n_shared": 995,
+    "gt_file": "ground_truth/gt_coarse_20260207_1321.json",
+    "validation_file": "validation_coarse (1).json"
+  },
+  "results": {
+    "Concept-kNN": {
+      "nmi_concept_gt": 0.5627,
+      "nmi_judge_gt": 0.5361,
+      "delta": 0.0266,
+      "ratio": 1.0496,
+      "type": "concept"
+    },
+    "Concept+KMeans": {
+      "nmi_concept_gt": 0.478,
+      "nmi_judge_gt": 0.4657,
+      "delta": 0.0123,
+      "ratio": 1.0264,
+      "type": "concept"
+    },
+    "SBERT+Leiden": {
+      "nmi_concept_gt": 0.535,
+      "nmi_judge_gt": 0.5249,
+      "delta": 0.0101,
+      "ratio": 1.0192,
+      "type": "embedding"
+    },
+    "SBERT+KMeans": {
+      "nmi_concept_gt": 0.519,
+      "nmi_judge_gt": 0.5136,
+      "delta": 0.0054,
+      "ratio": 1.0105,
+      "type": "embedding"
+    },
+    "SBERT+UMAP+KM": {
+      "nmi_concept_gt": 0.5501,
+      "nmi_judge_gt": 0.5341,
+      "delta": 0.016,
+      "ratio": 1.03,
+      "type": "embedding"
+    },
+    "TF-IDF+KMeans": {
+      "nmi_concept_gt": 0.4311,
+      "nmi_judge_gt": 0.4258,
+      "delta": 0.0053,
+      "ratio": 1.0124,
+      "type": "lexical"
+    }
+  },
+  "ranking_concept_gt": [
+    "Concept-kNN",
+    "SBERT+UMAP+KM",
+    "SBERT+Leiden",
+    "SBERT+KMeans",
+    "Concept+KMeans",
+    "TF-IDF+KMeans"
+  ],
+  "ranking_judge_gt": [
+    "Concept-kNN",
+    "SBERT+UMAP+KM",
+    "SBERT+Leiden",
+    "SBERT+KMeans",
+    "Concept+KMeans",
+    "TF-IDF+KMeans"
+  ],
+  "bias": {
+    "concept_ratio": 1.038,
+    "embed_ratio": 1.0199,
+    "diff_pct": 1.8,
+    "kendall_tau": 1.0,
+    "circular_bias": "False"
+  },
+  "elapsed_s": 2331.7
+}
