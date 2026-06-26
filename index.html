@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept-kNN Interactive Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A1628;--surface:#111D33;--card:#1A2740;--teal:#028090;--sea:#00A896;--mint:#02C39A;--white:#F0F7F8;--gray:#8899AA;--red:#EF4444;--green:#10B981;--amber:#F59E0B;--purple:#818CF8;--text:#E2E8F0}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.header{background:linear-gradient(135deg,var(--surface),var(--bg));border-bottom:1px solid rgba(2,192,154,0.15);padding:20px 0;text-align:center}
+.header h1{font-size:2.2em;font-weight:700;background:linear-gradient(135deg,var(--mint),var(--sea));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.header p{color:var(--gray);font-size:0.95em}
+.nav{display:flex;justify-content:center;gap:4px;padding:16px 12px;flex-wrap:wrap;max-width:1000px;margin:0 auto}
+.nav-btn{padding:8px 13px;border:1.5px solid rgba(2,128,144,0.2);border-radius:8px;background:var(--surface);color:var(--gray);cursor:pointer;font-family:inherit;font-size:0.78em;font-weight:500;transition:all .25s}
+.nav-btn:hover{border-color:var(--teal);color:var(--white)}
+.nav-btn.active{background:var(--teal);border-color:var(--teal);color:var(--white);box-shadow:0 0 16px rgba(2,128,144,0.25)}
+.nav-btn .num{font-weight:700;margin-right:3px;font-family:'JetBrains Mono',monospace;font-size:0.9em}
+.container{max-width:960px;margin:0 auto;padding:0 20px 60px}
+.stage{animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage-header{margin:20px 0 16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.stage-header h2{font-size:1.6em;font-weight:700;color:var(--mint)}
+.stage-header .layman{color:var(--sea);font-size:0.85em;font-style:italic}
+.explain{background:var(--card);border-left:3px solid var(--sea);border-radius:0 8px 8px 0;padding:14px 18px;margin-bottom:20px;line-height:1.6;color:var(--gray);font-size:0.92em}
+.explain strong{color:var(--white)}
+.example-selector{margin-bottom:16px}
+.example-selector label{color:var(--gray);font-size:0.82em;display:block;margin-bottom:6px}
+.example-btns{display:flex;gap:6px;flex-wrap:wrap}
+.example-btn{padding:7px 12px;border:1px solid rgba(2,128,144,0.2);border-radius:6px;background:var(--surface);color:var(--gray);cursor:pointer;font-family:inherit;font-size:0.78em;transition:all .2s}
+.example-btn:hover,.example-btn.active{background:var(--teal);border-color:var(--teal);color:var(--white)}
+.panel{background:var(--card);border-radius:10px;padding:18px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.05)}
+.panel-title{font-size:0.75em;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal);font-weight:600;margin-bottom:10px}
+.prompt-box{background:var(--surface);border-radius:8px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:0.85em;color:var(--white);line-height:1.5;border:1px solid rgba(255,255,255,0.06)}
+.tag{display:inline-block;padding:4px 10px;border-radius:20px;font-size:0.8em;font-weight:500;margin:3px 4px 3px 0}
+.tag-ner{background:rgba(2,195,154,0.15);color:var(--mint);border:1px solid rgba(2,195,154,0.3)}
+.tag-dep{background:rgba(0,168,150,0.15);color:var(--sea);border:1px solid rgba(0,168,150,0.3)}
+.tag-tech{background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3)}
+.tag-np{background:rgba(99,102,241,0.15);color:var(--purple);border:1px solid rgba(99,102,241,0.3)}
+.tag-pmi{background:rgba(2,128,144,0.15);color:#67CDD8;border:1px solid rgba(2,128,144,0.3)}
+.tag-removed{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);text-decoration:line-through;opacity:0.6}
+.arrow-down{text-align:center;color:var(--teal);font-size:1.5em;margin:10px 0;opacity:0.4}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+.stat{text-align:center;padding:14px}
+.stat .num{font-size:2.2em;font-weight:700;color:var(--mint);font-family:'JetBrains Mono',monospace}
+.stat .label{color:var(--gray);font-size:0.8em;margin-top:4px}
+.substep{background:var(--surface);border-radius:8px;padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--teal);cursor:pointer;transition:all .2s}
+.substep:hover{border-color:var(--mint)}
+.substep.expanded .substep-detail{display:block}
+.substep-head{display:flex;justify-content:space-between;align-items:center}
+.substep-num{font-family:'JetBrains Mono';font-size:0.85em;color:var(--teal);font-weight:600;min-width:28px}
+.substep-title{font-weight:600;color:var(--white);font-size:0.9em;flex:1}
+.substep-toggle{color:var(--gray);font-size:0.8em;transition:transform .2s}
+.substep.expanded .substep-toggle{transform:rotate(180deg)}
+.substep-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05);font-size:0.85em;color:var(--gray);line-height:1.6}
+.weight-bar{display:flex;align-items:center;gap:8px;margin:4px 0}
+.weight-bar .wname{min-width:140px;font-size:0.82em;color:var(--text);font-family:'JetBrains Mono'}
+.weight-bar .bar{flex:1;height:18px;background:var(--surface);border-radius:4px;overflow:hidden}
+.weight-bar .fill{height:100%;border-radius:4px}
+.weight-bar .val{min-width:40px;font-size:0.78em;color:var(--gray);text-align:right;font-family:'JetBrains Mono'}
+.cascade-round{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.cascade-round:last-child{border:none}
+.cascade-tau{font-family:'JetBrains Mono';font-size:0.85em;color:var(--amber);min-width:55px}
+.cascade-bar{flex:1;height:20px;background:var(--surface);border-radius:4px;overflow:hidden;position:relative}
+.cascade-fill{height:100%;border-radius:4px}
+.cascade-pct{position:absolute;right:6px;top:2px;font-size:0.72em;color:var(--white);font-weight:600}
+.cascade-info{min-width:80px;font-size:0.75em;color:var(--gray);text-align:right}
+.highlight-box{background:rgba(2,195,154,0.08);border:1px solid rgba(2,195,154,0.2);border-radius:8px;padding:12px 16px;margin:10px 0;font-size:0.88em;color:var(--mint)}
+.highlight-box a{color:var(--mint)}
+.warn-box{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px 16px;margin:10px 0;font-size:0.88em;color:var(--red)}
+.tech-note{font-size:0.76em;color:var(--gray);font-family:'JetBrains Mono',monospace;background:var(--surface);padding:8px 12px;border-radius:6px;margin-top:10px;line-height:1.5}
+.nav-arrows{display:flex;justify-content:space-between;margin-top:20px;gap:12px}
+.arr-btn{padding:10px 20px;background:var(--surface);border:1.5px solid rgba(2,128,144,0.3);border-radius:8px;color:var(--gray);font-family:inherit;font-size:0.85em;font-weight:500;cursor:pointer;transition:all .2s}
+.arr-btn:hover{border-color:var(--teal);color:var(--white)}
+.arr-btn.primary{background:linear-gradient(135deg,var(--teal),var(--sea));border-color:transparent;color:var(--white)}
+.arr-btn.primary:hover{box-shadow:0 4px 16px rgba(2,128,144,0.4);transform:translateY(-1px)}
+.problem-card{background:var(--card);border-radius:10px;padding:18px;border:1px solid rgba(255,255,255,0.05);transition:all .3s}
+.problem-card:hover{border-color:var(--teal);transform:translateY(-2px)}
+.comparison-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.comparison-label{min-width:170px;font-size:0.83em}
+.comparison-bar{flex:1;height:22px;background:var(--surface);border-radius:4px;overflow:hidden}
+.comparison-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
+.comparison-val{font-size:0.72em;font-weight:600;color:var(--white)}
+.comparison-cost{min-width:60px;font-size:0.78em;color:var(--gray);text-align:right}
+.footer{text-align:center;padding:40px 20px;color:var(--gray);font-size:0.82em;border-top:1px solid rgba(255,255,255,0.05)}
+.footer a{color:var(--sea);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="header"><h1>Concept-kNN</h1><p>Interactive Pipeline Demo &middot; IEEE CONECCT 2026 &middot; Bhatia &amp; Mehala</p></div>
+<div class="nav" id="nav"></div>
+<div class="container" id="content"></div>
+<div class="footer"><p>Paper &amp; Code: <a href="https://github.com/dnbresearch/concept-knn" target="_blank">github.com/dnbresearch/concept-knn</a> &middot; Zero API cost &middot; 100% coverage &middot; Fully reproducible</p></div>
+<script>
+const EX=[
+{id:"react",label:"React Web Dev",prompt:"How do I build a dynamic web app with React? What are React components and hooks?",
+ner:["React"],dep:["build web app"],tech:["React","JavaScript"],np:["components","hooks","dynamic web app"],
+noise:["feel free","this helps","good question"],
+weights:{React:0.28,JavaScript:0.22,"build web app":0.19,components:0.15,hooks:0.10,"dynamic web app":0.06},
+boosted:["React","build web app","components","hooks","dynamic web app"],
+pmi_pairs:{"React":["useState","JSX","virtual DOM","frontend","npm"],"JavaScript":["ES6","TypeScript","Node.js"],"components":["props","state","lifecycle"]},
+pmi_all:["useState","JSX","virtual DOM","frontend","npm","ES6","TypeScript","props","state","lifecycle","webpack","SPA","Redux"],
+tfidf:["react","components","hooks","dynamic","web","app","build"],
+neighbors:[{t:"How to use React hooks for state management?",s:0.87},{t:"Best practices for React component architecture",s:0.82},{t:"React vs Vue for building SPAs",s:0.79},{t:"Should I use Redux or Context API?",s:0.76}],
+cluster:{name:"React/Frontend Dev",n:342,concepts:["react","components","hooks","useState","JSX","frontend","npm"],purity:"82%",gt:"programming"},
+nearby:["Vue.js/Frontend (n=156)","Angular/TypeScript (n=98)","General JavaScript (n=445)"]},
+
+{id:"bert",label:"BERT/NLP",prompt:"How do I fine-tune a BERT model for sentiment analysis using Hugging Face?",
+ner:["BERT","Hugging Face"],dep:["fine-tune model"],tech:["sentiment analysis"],np:["BERT model"],
+noise:["step by step","following"],
+weights:{BERT:0.26,"Hugging Face":0.22,"fine-tune model":0.21,"sentiment analysis":0.18,"BERT model":0.13},
+boosted:["BERT","Hugging Face","fine-tune model","sentiment analysis","BERT model"],
+pmi_pairs:{"BERT":["transformer","pre-trained","tokenizer","attention","encoder"],"sentiment analysis":["text classification","NLP","polarity"],"Hugging Face":["pipeline","AutoModel","datasets"]},
+pmi_all:["transformer","pre-trained model","tokenizer","text classification","NLP","transfer learning","PyTorch","attention","encoder","pipeline","AutoModel"],
+tfidf:["bert","fine-tune","sentiment","analysis","hugging","face","model"],
+neighbors:[{t:"Training a transformer model for text classification",s:0.84},{t:"Hugging Face tutorial for NER tasks",s:0.81},{t:"BERT vs GPT for sentiment analysis",s:0.78},{t:"How to use AutoTokenizer in transformers",s:0.73}],
+cluster:{name:"NLP/Transformers",n:189,concepts:["BERT","transformer","hugging face","tokenizer","fine-tuning","NLP"],purity:"78%",gt:"programming"},
+nearby:["GPT/Language Models (n=234)","Text Processing (n=112)","Deep Learning/PyTorch (n=287)"]},
+
+{id:"genshin",label:"Genshin Impact",prompt:"Provide me extremely detailed steps in UE5 to create a combat system like Genshin Impact",
+ner:["Genshin Impact","UE5"],dep:["create combat system"],tech:["Unreal Engine 5"],np:["combat system","detailed steps"],
+noise:["extremely","provide me"],
+weights:{"Genshin Impact":0.28,"create combat system":0.24,UE5:0.20,"Unreal Engine 5":0.16,"combat system":0.12},
+boosted:["Genshin Impact","UE5","create combat system","combat system"],
+pmi_pairs:{"Genshin Impact":["liyue","beidou","klee","mondstadt","elemental"],"UE5":["blueprint","C++","game engine"],"combat system":["hitbox","animation","combo"]},
+pmi_all:["liyue","beidou","klee","mondstadt","elemental","gacha","open world","blueprint","C++","hitbox","animation","combo"],
+tfidf:["genshin","impact","combat","system","UE5","unreal","steps"],
+neighbors:[{t:"How to implement elemental reactions like Genshin?",s:0.83},{t:"Genshin team building for Spiral Abyss",s:0.79},{t:"Best Genshin builds for Beidou",s:0.75},{t:"Creating action RPG combat in UE5",s:0.72}],
+cluster:{name:"Genshin Impact/Gaming",n:138,concepts:["genshin impact","liyue","beidou","mondstadt","combat system","elemental"],purity:"51%",gt:"gaming"},
+nearby:["Game Dev/UE5 (n=94)","Anime/Manga (n=201)","RPG Mechanics (n=67)"]},
+
+{id:"luxian",label:"Fantasy Fiction",prompt:"I need help developing a calendar that the Luxian Empire might use in my fantasy novel.",
+ner:["Luxian Empire"],dep:["developing calendar"],tech:[],np:["fantasy novel","Luxian Empire","calendar"],
+noise:["I need help","might use"],
+weights:{"Luxian Empire":0.31,"developing calendar":0.27,"fantasy novel":0.24,calendar:0.18},
+boosted:["Luxian Empire","developing calendar","fantasy novel","calendar"],
+pmi_pairs:{"Luxian Empire":["jaedala","prince wukong","parvati","golden eyes","empress"],"fantasy novel":["worldbuilding","magic system","map","lore"]},
+pmi_all:["jaedala","prince wukong","parvati","golden eyes","empress","worldbuilding","magic system","lore","map","months","seasons"],
+tfidf:["luxian","empire","calendar","fantasy","novel","developing","help"],
+neighbors:[{t:"Design a magic system for the Luxian Empire",s:0.91},{t:"Write a scene with Prince Wukong and Parvati",s:0.88},{t:"Help me create a political map for my fantasy world",s:0.74},{t:"What calendar systems did ancient civilizations use?",s:0.62}],
+cluster:{name:"Luxian Empire Fiction",n:129,concepts:["jaedala","prince wukong","parvati","luxian empire","golden eyes","empress"],purity:"67%",gt:"creative writing"},
+nearby:["General Worldbuilding (n=245)","Character Development (n=312)","Historical Fiction (n=87)"]},
+
+{id:"sql",label:"SQL Database",prompt:"Write a SQL query to find the top 10 customers by total order amount with their department names",
+ner:[],dep:["write query","find customers"],tech:["SQL"],np:["SQL query","order amount","department names","top customers"],
+noise:["with their"],
+weights:{"SQL query":0.26,"find customers":0.22,SQL:0.20,"order amount":0.17,"department names":0.15},
+boosted:["SQL query","find customers","SQL","order amount","department names","top customers"],
+pmi_pairs:{"SQL":["JOIN","GROUP BY","SELECT","database","PostgreSQL"],"query":["aggregate","subquery","WHERE","index"]},
+pmi_all:["JOIN","GROUP BY","aggregate","SELECT","database","PostgreSQL","index","table","WHERE","subquery","ORDER BY"],
+tfidf:["sql","query","customers","order","amount","department","top"],
+neighbors:[{t:"How to optimize SQL queries with indexes?",s:0.85},{t:"Complex JOIN operations in PostgreSQL",s:0.82},{t:"SQL window functions for ranking",s:0.78},{t:"Database normalization best practices",s:0.71}],
+cluster:{name:"SQL/Database",n:267,concepts:["SQL","query","JOIN","database","table","PostgreSQL","aggregate"],purity:"85%",gt:"programming"},
+nearby:["NoSQL/MongoDB (n=89)","Data Engineering (n=156)","Backend Dev (n=334)"]}
+];
+
+const STAGES=[
+{id:"problem",label:"Problem",num:"?"},{id:"overview",label:"Overview",num:"⟶"},
+{id:"s1a",label:"1a: Clean",num:"1a"},{id:"s1b",label:"1b: Extract",num:"1b"},{id:"s1c",label:"1c: Weight",num:"1c"},
+{id:"s2a",label:"2a: PMI",num:"2a"},{id:"s2b",label:"2b: Densify",num:"2b"},
+{id:"s3a",label:"3a: Blend",num:"3a"},{id:"s3b",label:"3b: Graph",num:"3b"},
+{id:"s4a",label:"4a: Leiden",num:"4a"},{id:"s4b",label:"4b: Cascade",num:"4b"},
+{id:"results",label:"Results",num:"★"}];
+
+let cur="problem",exIdx=0;
+const order=STAGES.map(s=>s.id);
+function go(id){cur=id;document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));document.getElementById("nav-"+id).classList.add("active");render();window.scrollTo({top:0,behavior:'smooth'})}
+function setEx(i){exIdx=i;render()}
+function exSel(){return '<div class="example-selector"><label>Choose an example:</label><div class="example-btns">'+EX.map((e,i)=>'<button class="example-btn '+(i===exIdx?'active':'')+'" onclick="setEx('+i+')">'+e.label+'</button>').join("")+'</div></div>'}
+function nav(){const i=order.indexOf(cur);const p=i>0?order[i-1]:null;const n=i<order.length-1?order[i+1]:null;return '<div class="nav-arrows">'+(p?'<button class="arr-btn" onclick="go(\''+p+'\')">← Previous</button>':'<div></div>')+(n?'<button class="arr-btn primary" onclick="go(\''+n+'\')">Next Step →</button>':'<div></div>')+'</div>'}
+function unique(ex){return[...new Set([...ex.ner,...ex.dep,...ex.tech,...ex.np])]}
+
+function init(){const el=document.getElementById("nav");STAGES.forEach(s=>{const b=document.createElement("button");b.className="nav-btn "+(s.id===cur?"active":"");b.innerHTML='<span class="num">'+s.num+'</span>'+s.label;b.onclick=()=>go(s.id);b.id="nav-"+s.id;el.appendChild(b)});render()}
+
+function render(){
+const el=document.getElementById("content"),ex=EX[exIdx];
+const R={problem:rProblem,overview:rOverview,s1a:rS1a,s1b:rS1b,s1c:rS1c,s2a:rS2a,s2b:rS2b,s3a:rS3a,s3b:rS3b,s4a:rS4a,s4b:rS4b,results:rResults};
+el.innerHTML='<div class="stage active">'+(R[cur]||rProblem)(ex)+nav()+'</div>'}
+
+function rProblem(){return `
+<div class="stage-header"><h2>The Problem</h2></div>
+<div class="explain">ChatGPT, Claude, Gemini — LLM platforms generate <strong>millions of conversations daily</strong>. Each is about something different: coding, fiction, homework, gaming, legal advice... But how do you organize them all?</div>
+<div class="grid3" style="margin-bottom:20px">
+<div class="problem-card"><div style="font-size:1.8em;margin-bottom:8px">🌊</div><div style="font-weight:600;color:var(--white);margin-bottom:6px">Massive Scale</div><div style="font-size:0.85em;color:var(--gray);line-height:1.5">ShareGPT: <strong>162,000</strong> conversations across <strong>3,115</strong> fine-grained categories. Manual labeling is impossible.</div></div>
+<div class="problem-card"><div style="font-size:1.8em;margin-bottom:8px">🔮</div><div style="font-weight:600;color:var(--white);margin-bottom:6px">Unknown Categories</div><div style="font-size:0.85em;color:var(--gray);line-height:1.5">New topics emerge daily. "Genshin Impact builds" and "Luxian Empire worldbuilding" aren't in any textbook.</div></div>
+<div class="problem-card"><div style="font-size:1.8em;margin-bottom:8px">🛡️</div><div style="font-weight:600;color:var(--white);margin-bottom:6px">Safety Critical</div><div style="font-size:0.85em;color:var(--gray);line-height:1.5">Content moderation, misuse detection, and product analytics all need organized conversation data.</div></div>
+</div>
+<div class="panel"><div class="panel-title">Why Existing Methods Fall Short</div>
+<div class="substep" onclick="this.classList.toggle('expanded')"><div class="substep-head"><span class="substep-num">①</span><span class="substep-title">TF-IDF + KMeans — Misses meaning</span><span class="substep-toggle">▼</span></div><div class="substep-detail">"Build a React app" and "create a frontend component" use different words but mean the same thing. TF-IDF can't see this. Also requires guessing k upfront.</div></div>
+<div class="substep" onclick="this.classList.toggle('expanded')"><div class="substep-head"><span class="substep-num">②</span><span class="substep-title">SBERT Embeddings — Blurs details</span><span class="substep-toggle">▼</span></div><div class="substep-detail">Neural embeddings capture meaning but compress everything into 384 numbers. Fine-grained distinctions (React vs Vue vs Angular) get blurred. Still needs k.</div></div>
+<div class="substep" onclick="this.classList.toggle('expanded')"><div class="substep-head"><span class="substep-num">③</span><span class="substep-title">LLM-Assisted (Clio, TnT-LLM) — Expensive & slow</span><span class="substep-toggle">▼</span></div><div class="substep-detail">Clio costs <strong>$23</strong> and takes <strong>86 hours</strong>. TnT-LLM produces only 58-64 clusters — far too coarse for 3,000+ categories. Neither is reproducible.</div></div>
+</div>
+<div class="highlight-box">💡 <strong>Our insight:</strong> Classical NLP (spaCy) extracts interpretable "concepts" that capture fine-grained topics. Graph-based clustering finds natural communities without specifying k. Zero cost. Full coverage. Fully reproducible.</div>`}
+
+function rOverview(){return `
+<div class="stage-header"><h2>Pipeline Overview</h2></div>
+<div class="explain">Concept-kNN has <strong>4 main stages</strong>. Click any to dive deeper — each has sub-steps you can explore.</div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">
+${[{id:"s1a",n:"1",t:"NLP Concept Extraction",d:"Extract topics, entities, and actions using spaCy. Four techniques: NER, dependency parsing, tech detection, noun phrase chunking. Then filter noise and assign IDF weights.",sub:"3 sub-steps: Clean → Extract → Weight",c:"var(--teal)"},
+{id:"s2a",n:"2",t:"PMI Concept Enrichment",d:"Compute corpus-wide co-occurrence statistics. Add related concepts: if 'BERT' and 'transformer' always co-occur, add 'transformer' where only 'BERT' appears.",sub:"2 sub-steps: PMI Scores → Densification",c:"#0E7490"},
+{id:"s3a",n:"3",t:"kNN Graph Construction",d:"Blend concepts (80%) with TF-IDF words (20%). Connect each conversation to its 30 most similar neighbors via cosine similarity.",sub:"2 sub-steps: Hybrid Blend → Graph Build",c:"#0891B2"},
+{id:"s4a",n:"4",t:"Leiden Clustering & Cascade",d:"Find natural communities without specifying k. Then cascade 6 rounds to ensure 100% coverage — no conversation left behind.",sub:"2 sub-steps: Leiden → Cascade",c:"#065F73"}
+].map(s=>'<div class="panel" style="border-top:3px solid '+s.c+';cursor:pointer" onclick="go(\''+s.id+'\')"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="font-size:1.8em;font-weight:700;color:'+s.c+';font-family:JetBrains Mono">'+s.n+'</div><div style="font-weight:600;color:var(--mint);font-size:1.05em">'+s.t+'</div></div><div style="font-size:0.85em;color:var(--gray);line-height:1.5;margin-bottom:8px">'+s.d+'</div><div style="font-size:0.75em;color:var(--teal)">'+s.sub+'</div></div>').join("")}
+</div>
+<div class="grid2" style="margin-top:16px">
+<div class="panel"><div class="stat"><div class="num">0.635</div><div class="label">balanced score on LMSYS (best of 14 methods)</div></div></div>
+<div class="panel"><div class="stat"><div class="num">200s</div><div class="label">clustering time on CPU for 98K conversations</div></div></div>
+</div>`}
+
+function rS1a(ex){return exSel()+`
+<div class="stage-header"><h2>Step 1a: Text Cleaning</h2><span class="layman">Removing the noise</span></div>
+<div class="explain">Before extracting concepts, we <strong>clean</strong> each conversation: remove code blocks, URLs, file paths, and non-natural-language content. This prevents false concepts from code artifacts.</div>
+<div class="panel"><div class="panel-title">Raw Input</div><div class="prompt-box">${ex.prompt}</div></div>
+<div class="arrow-down">↓ remove code blocks, URLs, file paths, boilerplate</div>
+<div class="panel"><div class="panel-title">Cleaned Text</div><div class="prompt-box">${ex.prompt}</div>
+<div class="tech-note">In practice: code blocks (triple backticks), URLs (https://...), file paths (/usr/bin/...), and template boilerplate are stripped. This example is already clean text.</div></div>`}
+
+function rS1b(ex){return exSel()+`
+<div class="stage-header"><h2>Step 1b: NLP Concept Extraction</h2><span class="layman">"The Keyword Spotter"</span></div>
+<div class="explain">spaCy reads the text and identifies important topics using <strong>four complementary techniques</strong>. Each catches different types of concepts.</div>
+<div class="panel"><div class="panel-title">Input Text</div><div class="prompt-box">${ex.prompt}</div></div>
+<div class="arrow-down">↓ four NLP techniques in parallel</div>
+<div class="substep expanded"><div class="substep-head"><span class="substep-num" style="color:var(--mint)">NER</span><span class="substep-title">Named Entity Recognition</span></div>
+<div class="substep-detail">Identifies proper nouns, organizations, products, and domain terms.<br><br>${ex.ner.length?ex.ner.map(c=>'<span class="tag tag-ner">'+c+'</span>').join(""):'<span style="color:var(--gray);font-style:italic">No named entities in this example</span>'}</div></div>
+<div class="substep expanded"><div class="substep-head"><span class="substep-num" style="color:var(--sea)">DEP</span><span class="substep-title">Dependency Parsing (verb + object)</span></div>
+<div class="substep-detail">Extracts action-oriented phrases — captures <strong>what the user wants to do</strong>.<br><br>${ex.dep.map(c=>'<span class="tag tag-dep">'+c+'</span>').join("")}</div></div>
+<div class="substep expanded"><div class="substep-head"><span class="substep-num" style="color:var(--amber)">TECH</span><span class="substep-title">Technical Term Detection</span></div>
+<div class="substep-detail">Regex patterns recognize programming languages, frameworks, and tools.<br><br>${ex.tech.length?ex.tech.map(c=>'<span class="tag tag-tech">'+c+'</span>').join(""):'<span style="color:var(--gray);font-style:italic">No technical terms detected</span>'}</div></div>
+<div class="substep expanded"><div class="substep-head"><span class="substep-num" style="color:var(--purple)">NP</span><span class="substep-title">Noun Phrase Chunking</span></div>
+<div class="substep-detail">Multi-word topic expressions that give context.<br><br>${ex.np.map(c=>'<span class="tag tag-np">'+c+'</span>').join("")}</div></div>
+<div class="highlight-box">✅ Total: <strong>${unique(ex).length} unique concepts</strong> extracted — all via spaCy, zero API cost, fully deterministic.</div>`}
+
+function rS1c(ex){const entries=Object.entries(ex.weights).sort((a,b)=>b[1]-a[1]);const mx=Math.max(...entries.map(e=>e[1]));
+return exSel()+`
+<div class="stage-header"><h2>Step 1c: Filter & Weight</h2><span class="layman">Keeping the signal, removing noise</span></div>
+<div class="explain">Not all concepts are useful. We <strong>remove noise</strong> (filler phrases, person names, generic terms), then assign <strong>IDF weights</strong> — rare concepts matter more. Prompt-sourced concepts get a <strong>3× boost</strong> since user prompts best indicate intent.</div>
+<div class="panel"><div class="panel-title">❌ Noise Removed</div>${ex.noise.map(c=>'<span class="tag tag-removed">'+c+'</span>').join("")}
+<div style="font-size:0.82em;color:var(--gray);margin-top:6px">Filler phrases, LLM boilerplate, and overly generic terms filtered by blocklists + IDF thresholds (IDF < 0.5 or doc freq > 8% of corpus).</div></div>
+<div class="panel"><div class="panel-title">✅ Surviving Concepts with IDF Weights</div>
+${entries.map(([name,w])=>'<div class="weight-bar"><div class="wname">'+name+'</div><div class="bar"><div class="fill" style="width:'+w/mx*100+'%;background:'+(ex.boosted.includes(name)?'linear-gradient(90deg,var(--teal),var(--mint))':'rgba(100,136,171,0.4)')+'"></div></div><div class="val">'+w.toFixed(2)+'</div></div>').join("")}
+<div class="tech-note">IDF = log(N / df(c)) · Doc freq bounds: [3, 0.08N] · <span style="color:var(--mint)">■</span> = prompt-sourced (3× boost) · Typically 8-16 concepts survive per conversation</div></div>`}
+
+function rS2a(ex){return exSel()+`
+<div class="stage-header"><h2>Step 2a: Computing PMI Scores</h2><span class="layman">Finding which concepts are "friends"</span></div>
+<div class="explain"><strong>Pointwise Mutual Information</strong> measures how often two concepts appear together vs. what you'd expect by chance. High PMI = strong topical association. We compute this across the <strong>entire corpus</strong> (98K-162K conversations).</div>
+<div class="panel"><div class="panel-title">The PMI Formula</div>
+<div style="text-align:center;padding:16px;font-family:'JetBrains Mono';font-size:1.1em;color:var(--mint)">PMI(c<sub>i</sub>, c<sub>j</sub>) = log P(c<sub>i</sub>, c<sub>j</sub>) / P(c<sub>i</sub>) · P(c<sub>j</sub>)</div>
+<div style="color:var(--gray);font-size:0.85em;text-align:center;margin-top:8px">PMI > 0 → appear together more than chance · PMI ≥ 1.0 → at least 2× more than chance (our threshold)</div></div>
+<div class="panel"><div class="panel-title">Top PMI Associates for This Example's Concepts</div>
+${Object.entries(ex.pmi_pairs).map(([c,assoc])=>'<div style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tag tag-ner">'+c+'</span><span style="color:var(--gray);font-size:0.85em">→ top associates:</span></div><div style="padding-left:16px">'+assoc.map(a=>'<span class="tag tag-pmi">'+a+'</span>').join("")+'</div></div>').join("")}
+<div class="tech-note">Computed over entire corpus · Min PMI ≥ 1.0 · Min concept frequency ≥ 3 · Top K=35 associates per concept</div></div>`}
+
+function rS2b(ex){const orig=unique(ex);return exSel()+`
+<div class="stage-header"><h2>Step 2b: Concept Densification</h2><span class="layman">"The Knowledge Booster"</span></div>
+<div class="explain">Now we <strong>add PMI associates</strong> to each conversation. A prompt mentioning "BERT" gets "transformer", "tokenizer" added automatically. This boosts concepts per item from <strong>8-16 → 20-35</strong>, creating much better graph connectivity.</div>
+<div class="grid2">
+<div class="panel" style="border-left:3px solid var(--red)"><div class="panel-title" style="color:var(--red)">Before: ${orig.length} concepts</div>${orig.map(c=>'<span class="tag tag-ner">'+c+'</span>').join("")}</div>
+<div class="panel" style="border-left:3px solid var(--green)"><div class="panel-title" style="color:var(--green)">After: ${orig.length+ex.pmi_all.length} concepts</div>${orig.map(c=>'<span class="tag tag-ner">'+c+'</span>').join("")}${ex.pmi_all.map(c=>'<span class="tag tag-pmi">+ '+c+'</span>').join("")}</div></div>
+<div class="panel"><div class="panel-title">Why This Matters</div>
+<div style="color:var(--gray);font-size:0.9em;line-height:1.7">Without densification, two conversations about "BERT fine-tuning" and "transformer training" might share zero concepts — even though they're about the same thing. PMI bridges this gap by adding shared associates, making the kNN graph much more connected.</div>
+<div class="tech-note">Weight of new concept = parent_weight × 0.3 × min(PMI/3, 1) · Max 20 new concepts per item · Concepts per item: 8-16 → 20-35</div></div>`}
+
+function rS3a(ex){const orig=unique(ex);return exSel()+`
+<div class="stage-header"><h2>Step 3a: Hybrid Vector Construction</h2><span class="layman">Blending two perspectives</span></div>
+<div class="explain">Each conversation becomes a single vector by <strong>blending 80% concept features with 20% TF-IDF word features</strong>. Concepts capture semantic topics; TF-IDF captures exact word patterns. Together they're stronger than either alone (+9% from blending).</div>
+<div class="panel"><div class="panel-title">The Blend: v = L2-normalize([α · concepts ; (1-α) · tfidf])</div>
+<div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+<div style="flex:4;min-width:200px;background:rgba(2,128,144,0.12);padding:14px;border-radius:8px;border:1px solid rgba(2,128,144,0.2)">
+<div style="font-weight:600;color:var(--mint);margin-bottom:8px">80% Concept Vector (α = 0.8)</div>
+<div style="font-size:0.8em;color:var(--gray);margin-bottom:6px">Each dimension = a human-readable topic</div>
+${orig.concat(ex.pmi_all.slice(0,5)).map(c=>'<span class="tag tag-ner" style="font-size:0.72em">'+c+'</span>').join("")}<span style="color:var(--gray);font-size:0.78em"> ...</span></div>
+<div style="display:flex;align-items:center;color:var(--gray);font-size:1.3em;padding:0 4px">+</div>
+<div style="flex:1.5;min-width:150px;background:rgba(245,158,11,0.08);padding:14px;border-radius:8px;border:1px solid rgba(245,158,11,0.15)">
+<div style="font-weight:600;color:var(--amber);margin-bottom:8px">20% TF-IDF (5K features)</div>
+<div style="font-size:0.78em;color:var(--gray)">${ex.tfidf.slice(0,5).join(", ")}...</div></div></div>
+<div class="tech-note">Why 80/20? Ablation showed α=0.8 optimal on both datasets. Concepts = 49% of total improvement, hybrid blend = 9% more.</div></div>`}
+
+function rS3b(ex){return exSel()+`
+<div class="stage-header"><h2>Step 3b: kNN Graph Construction</h2><span class="layman">"The Connection Maker"</span></div>
+<div class="explain">We build a <strong>social network of conversations</strong>. For each, we find its <strong>30 most similar neighbors</strong> by cosine similarity. Only connections above σ = 0.6 are kept. The result: a giant graph where similar conversations are linked.</div>
+<div class="panel"><div class="panel-title">Nearest Neighbors for This Prompt</div>
+${ex.neighbors.map((n,i)=>'<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)"><div style="font-family:JetBrains Mono;color:var(--sea);font-size:0.85em;min-width:20px">#'+(i+1)+'</div><div style="flex:1;font-size:0.88em;color:var(--text)">"'+n.t+'"</div><div style="min-width:80px;text-align:right"><div style="height:6px;width:'+n.s*100+'%;background:'+(n.s>=0.8?'var(--mint)':n.s>=0.7?'var(--sea)':'var(--amber)')+';border-radius:3px;margin-left:auto"></div><div style="font-family:JetBrains Mono;font-size:0.78em;color:var(--gray);margin-top:2px">'+n.s.toFixed(2)+'</div></div></div>').join("")}
+</div>
+<div class="panel"><div class="panel-title">Graph Statistics</div>
+<div class="grid3"><div class="stat"><div class="num">30</div><div class="label">neighbors per item (k)</div></div><div class="stat"><div class="num">0.6</div><div class="label">similarity threshold (σ)</div></div><div class="stat"><div class="num">~200s</div><div class="label">build time (CPU)</div></div></div>
+<div class="tech-note">Brute-force cosine similarity · Symmetrized adjacency · Scalable to O(Nd log N) via FAISS/Annoy</div></div>`}
+
+function rS4a(ex){return exSel()+`
+<div class="stage-header"><h2>Step 4a: Leiden Community Detection</h2><span class="layman">"Finding friend groups"</span></div>
+<div class="explain">The <strong>Leiden algorithm</strong> examines the graph and finds <strong>natural clusters</strong> — groups of conversations more connected to each other than to the rest. Unlike KMeans, <strong>no need to specify k</strong>.</div>
+<div class="panel"><div class="panel-title">This Prompt's Cluster</div>
+<div style="background:var(--surface);border-radius:8px;padding:16px;border-left:3px solid var(--mint)">
+<div style="font-weight:600;color:var(--mint);font-size:1.1em;margin-bottom:6px">📁 ${ex.cluster.name} (n=${ex.cluster.n})</div>
+<div style="font-size:0.85em;color:var(--gray);margin-bottom:8px">Top concepts: <span style="color:var(--sea);font-family:JetBrains Mono">${ex.cluster.concepts.join(", ")}</span></div>
+<div style="font-size:0.85em;color:var(--gray)">Purity: <strong style="color:var(--mint)">${ex.cluster.purity}</strong> · GT: <strong>${ex.cluster.gt}</strong></div></div></div>
+<div class="panel"><div class="panel-title">Nearby Clusters</div>${ex.nearby.map(c=>'<div style="padding:8px 12px;margin-bottom:6px;background:var(--surface);border-radius:6px;font-size:0.88em;color:var(--gray)">📂 '+c+'</div>').join("")}</div>
+<div class="warn-box">⚠️ <strong>Problem:</strong> Leiden achieves NMI of 0.670 but only <strong>74% coverage</strong> — 26% of conversations are singletons (isolated nodes). The cascade fixes this...</div>
+<div class="tech-note">Leiden: Reichardt–Bornholdt model · Resolution γ = 30 · 3 iterations · Seed 42 · Discovers 17,000+ clusters</div>`}
+
+function rS4b(ex){const C=[{t:"Leiden",c:73.9,b:0.495,n:"0.670",col:"var(--teal)"},{t:"τ=0.5",c:81.7,b:0.538,n:"0.658",col:"var(--teal)"},{t:"τ=0.4",c:86.6,b:0.563,n:"0.650",col:"var(--sea)"},{t:"τ=0.3",c:91.3,b:0.587,n:"0.643",col:"var(--sea)"},{t:"τ=0.2",c:97.9,b:0.617,n:"0.630",col:"var(--mint)"},{t:"τ=0.1",c:99.8,b:0.625,n:"0.626",col:"var(--mint)"},{t:"τ=0.0",c:100,b:0.626,n:"0.626",col:"var(--green)"}];
+return exSel()+`
+<div class="stage-header"><h2>Step 4b: Cascading Reassignment</h2><span class="layman">"Nobody left behind"</span></div>
+<div class="explain">Singletons are conversations too isolated for Leiden. The cascade reassigns them in <strong>6 rounds</strong> with decreasing thresholds. After each round, centroids are <strong>recomputed</strong> so clusters shift to accommodate new members.</div>
+<div class="panel"><div class="panel-title">Coverage: 74% → 100% (ShareGPT)</div>
+${C.map(r=>'<div class="cascade-round"><div class="cascade-tau">'+r.t+'</div><div class="cascade-bar"><div class="cascade-fill" style="width:'+r.c+'%;background:'+r.col+'"></div><div class="cascade-pct">'+r.c+'%</div></div><div class="cascade-info">NMI: '+r.n+'</div></div>').join("")}</div>
+<div class="grid2">
+<div class="panel" style="border-left:3px solid var(--green)"><div class="panel-title" style="color:var(--green)">The Win</div><div style="font-size:0.9em;color:var(--gray);line-height:1.6">Coverage: 74% → <strong>100%</strong><br>Balanced score increases at <strong>every round</strong><br>Centroids recomputed → no error compounding</div></div>
+<div class="panel" style="border-left:3px solid var(--amber)"><div class="panel-title" style="color:var(--amber)">The Tradeoff</div><div style="font-size:0.9em;color:var(--gray);line-height:1.6">NMI: 0.670 → 0.626 (<strong>−6.5%</strong>)<br>But 26% more items clustered<br>Net: balanced score <strong style="color:var(--mint)">+26%</strong></div></div></div>
+<div class="highlight-box">✅ <strong>Result:</strong> Every conversation assigned to a meaningful cluster. 100% coverage with minimal quality loss.</div>`}
+
+function rResults(){const M=[{n:"Concept-kNN (Ours)",s:0.627,l:0.635,c:"$0",o:true},{n:"SBERT+UMAP+KMeans",s:0.568,l:0.591,c:"$0"},{n:"SBERT+Leiden",s:0.561,l:0.565,c:"$0"},{n:"ClusterLLM",s:0.536,l:0.554,c:"~$0.03"},{n:"Clio",s:0.516,l:0.526,c:"~$23"},{n:"TnT-LLM",s:0.131,l:0.139,c:"~$3.50"}];
+return `
+<div class="stage-header"><h2>Results</h2></div>
+<div class="explain">Concept-kNN outperforms <strong>all 13 baselines</strong> on both datasets — including three LLM-assisted methods — by <strong>7-21%</strong> at <strong>zero API cost</strong>.</div>
+<div class="panel"><div class="panel-title">Balanced Score (ShareGPT, 162K conversations)</div>
+${M.map(m=>'<div class="comparison-row"><div class="comparison-label" style="'+(m.o?'color:var(--mint);font-weight:600':'color:var(--gray)')+'">'+m.n+'</div><div class="comparison-bar"><div class="comparison-fill" style="width:'+m.s/0.65*100+'%;background:'+(m.o?'linear-gradient(90deg,var(--teal),var(--mint))':'rgba(100,136,171,0.3)')+'"><span class="comparison-val">'+m.s+'</span></div></div><div class="comparison-cost">'+m.c+'</div></div>').join("")}</div>
+<div class="grid3" style="margin-top:16px">
+<div class="panel"><div class="stat"><div class="num">49%</div><div class="label">from concept vectors</div></div></div>
+<div class="panel"><div class="stat"><div class="num">42%</div><div class="label">from Leiden clustering</div></div></div>
+<div class="panel"><div class="stat"><div class="num">9%</div><div class="label">from hybrid blending</div></div></div></div>
+<div class="panel" style="margin-top:16px"><div class="panel-title">Three-Layer Validation</div>
+<div class="substep expanded"><div class="substep-head"><span class="substep-num" style="color:var(--teal)">①</span><span class="substep-title">LLM Cross-Model: κ ≈ 0.35</span></div><div class="substep-detail">Independent LLM (Claude) re-categorizes 1,000 prompts. Consistent across both datasets.</div></div>
+<div class="substep expanded"><div class="substep-head"><span class="substep-num" style="color:var(--sea)">②</span><span class="substep-title">Circular Bias Test: τ = 1.0</span></div><div class="substep-detail">Method rankings perfectly preserved under concept-free GT. Only 1.8% NMI difference.</div></div>
+<div class="substep expanded"><div class="substep-head"><span class="substep-num" style="color:var(--mint)">③</span><span class="substep-title">Human Validation: κ = 0.81</span></div><div class="substep-detail">3 annotators, 100 prompts, 75% unanimous. Human κ >> LLM κ proves categories are well-defined.</div></div></div>
+<div class="highlight-box">🎯 <strong>Classical NLP beats LLM-assisted methods at zero cost.</strong> The right representation × algorithm pairing matters more than throwing money at APIs.<br><br>Code: <a href="https://github.com/dnbresearch/concept-knn" target="_blank">github.com/dnbresearch/concept-knn</a></div>`}
+
+init();
+
+</script>
+</body>
+</html>
